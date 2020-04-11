@@ -152,3 +152,80 @@ When searching for partial string matches, you might be interested in:
 | -- | -- |
 | _ | Exactly one character |
 | % |  Any number of characters (including 0) |
+
+
+The underscore character takes the place of a single character, while the percent sign can take the place of a variable number of characters. When building conditions that utilize search expressions, you use the like operator, as in:
+
+```
+SELECT last_name, first_name FROM customer WHERE last_name LIKE '_A_T%S';
+```
+
++-----------+------------+
+| last_name | first_name |
++-----------+------------+
+| MATTHEWS  | ERICA      |
+| WALTERS   | CASSANDRA  |
+| WATTS     | SHELLY     |
++-----------+------------+
+
+The search expression in the previous example specifies strings containing an A in the second position and a T in the fourth position, followed by any number of characters and ending in S.
+
+| Search expression	| Interpretation |
+| -- | -- |
+| F% | Strings beginning with F |
+| %t | Strings ending with t |
+| %bas% | Strings containing the substring 'bas' |
+| _ _t_ | Four-character strings with a t in the third position |
+| _ _ _-_ _-_ _ _ _ | 11-character strings with dashes in the fourth and seventh positions |
+
+The wildcard characters work fine for building simple search expressions; if your needs are a bit more sophisticated, however, you can use multiple search expressions, as demonstrated by the following:
+
+```
+SELECT last_name, first_name FROM customer WHERE last_name LIKE 'Q%' OR last_name LIKE 'Y%';
+```
+
++-------------+------------+
+| last_name   | first_name |
++-------------+------------+
+| QUALLS      | STEPHEN    |
+| QUIGLEY     | TROY       |
+| QUINTANILLA | ROGER      |
+| YANEZ       | LUIS       |
+| YEE         | MARVIN     |
+| YOUNG       | CYNTHIA    |
++-------------+------------+
+
+This query finds all customers whose last name begins with Q or Y.
+
+#### Using regular expressions
+
+Here’s what the previous query (find all customers whose last name starts with Q or Y) would look like using the MySQL implementation of regular expressions:
+
+```
+SELECT last_name, first_name FROM customer WHERE last_name REGEXP '^[QY]';
+```
+
+The regexp operator takes a regular expression ('^[QY]' in this example) and applies it to the expression on the lefthand side of the condition (the column last_name). The query now contains a single condition using a regular expression rather than two conditions using wildcard characters.
+
+#### Null: That Four-Letter Word
+
+When working with null, you should remember:		
+- An expression can be null, but it can never equal null.			
+- Two nulls are never equal to each other.
+
+```
+SELECT rental_id, customer_id FROM rental WHERE return_date IS NULL;
+```
+
+This query finds all film rentals that were never returned. Here’s the same query using = null instead of is null:
+
+```
+mysql> SELECT rental_id, customer_id FROM rental WHERE return_date = NULL;
+Empty set (0.01 sec)
+```
+
+If you want to see whether a value has been assigned to a column, you can use the is not null operator, as in:
+
+```
+SELECT rental_id, customer_id, return_date FROM rental WHERE return_date IS NOT NULL;
+```
